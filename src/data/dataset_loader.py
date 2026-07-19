@@ -22,3 +22,15 @@ def format_example_batched(batch):
 
 dataset = dataset.map(format_example_batched, batched=True, batch_size=1000)
 print(dataset[0]["text"])
+
+split_dataset = dataset.train_test_split(test_size=0.3, seed=42)
+train_dataset = split_dataset["train"]
+temp_dataset = split_dataset["test"]
+
+temp_split = temp_dataset.train_test_split(test_size=0.5, seed=42)
+val_dataset = temp_split["train"]
+test_dataset = temp_split["test"]
+
+print(f"Train: {len(train_dataset)}")
+print(f"Validation: {len(val_dataset)}")
+print(f"Test: {len(test_dataset)}")

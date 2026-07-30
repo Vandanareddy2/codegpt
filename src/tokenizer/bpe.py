@@ -91,3 +91,19 @@ def build_word_freqs(texts, pattern):
             word_freqs[char_tuple] = word_freqs.get(char_tuple, 0) + 1
 
     return word_freqs
+
+if __name__ == "__main__":
+    import re
+    from datasets import load_from_disk
+
+    PATTERN = re.compile(r"[A-Za-z0-9_]+|[^\sA-Za-z0-9_]|\s+")
+
+    train = load_from_disk("data/train")
+    sample_texts = train["text"][:1000]        # small sample first
+
+    word_freqs = build_word_freqs(sample_texts, PATTERN)
+    print(f"Unique starting chunks: {len(word_freqs)}")
+
+    merges = train_bpe(word_freqs, vocab_size=200)
+    print(f"Learned {len(merges)} merges")
+    print("First 20 merges:", merges[:20])

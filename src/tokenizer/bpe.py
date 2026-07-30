@@ -14,3 +14,12 @@ def get_pair_counts(word_freqs):
             pair_counts[pair] = pair_counts.get(pair, 0) + freq   # add this word's freq to the pair's total
 
     return pair_counts
+
+def get_most_frequent_pair(pair_counts):
+    """
+    pair_counts: dict mapping pair -> count (output of get_pair_counts)
+    Returns: the pair (tuple of 2 tokens) with the highest count
+    """
+    return max(pair_counts, key=pair_counts.get)
+
+

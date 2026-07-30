@@ -73,3 +73,21 @@ def train_bpe(word_freqs, vocab_size):
         word_freqs = merge_pair(best_pair, word_freqs)   # apply it, update for next round
 
     return merges
+
+def build_word_freqs(texts, pattern):
+    """
+    texts: list of raw strings (your Python code samples)
+    pattern: compiled regex for pre-tokenization
+
+    Returns: dict mapping character-tuple -> frequency count
+             e.g. {('d','e','f'): 120, (' ',): 5000, ...}
+    """
+    word_freqs = {}
+
+    for text in texts:
+        chunks = pattern.findall(text)          # split text into initial chunks
+        for chunk in chunks:
+            char_tuple = tuple(chunk)            # break chunk into individual characters
+            word_freqs[char_tuple] = word_freqs.get(char_tuple, 0) + 1
+
+    return word_freqs

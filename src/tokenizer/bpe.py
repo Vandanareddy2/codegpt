@@ -50,3 +50,26 @@ def merge_pair(pair, word_freqs):
 
     return new_word_freqs
 
+def train_bpe(word_freqs, vocab_size):
+    """
+    word_freqs: dict mapping word-tuple -> frequency (starting point, e.g. character-level)
+    vocab_size: target number of merge operations to perform
+
+    Returns:
+        merges: an ORDERED list of pairs, in the order they were merged
+                e.g. [('d','e'), ('de','f')]
+    """
+    merges = []
+
+    for _ in range(vocab_size):
+        pair_counts = get_pair_counts(word_freqs)
+
+        if not pair_counts:            # no more pairs left to merge (corpus exhausted)
+            break
+
+        best_pair = get_most_frequent_pair(pair_counts)
+        merges.append(best_pair)        # record this merge, in order
+
+        word_freqs = merge_pair(best_pair, word_freqs)   # apply it, update for next round
+
+    return merges

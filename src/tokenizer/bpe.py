@@ -74,6 +74,71 @@ def train_bpe(word_freqs, vocab_size):
 
     return merges
 
+def train_bpe_fast(word_freqs, vocab_size):
+    """
+    Optimized BPE training using incremental pair count updates.
+    Avoids rescanning the whole corpus every merge round.
+    """
+    # Convert word tuples to lists so we can mutate them in place
+    words = {word: freq for word, freq in word_freqs.items()}
+
+    # Initial full pair count (only done ONCE, not every round)
+    pair_counts = get_pair_counts(words)
+
+    # Reverse index: which words contain each pair
+    pair_to_words = {}
+    for word in words:
+        for i in range(len(word) - 1):
+            pair = (word[i], word[i + 1])
+            pair_to_words.setdefault(pair, set()).add(word)
+
+    merges = []
+
+    for _ in range(vocab_size):
+        if not pair_counts:
+            break
+
+        best_pair = get_most_frequent_pair(pair_counts)
+        merges.append(best_pair)
+
+        affected_words = pair_to_words.get(best_pair, set())
+        merged_token = best_pair[0] + best_pair[1]
+
+        for word in list(affected_words):
+            freq = words[word]
+
+            # STEP 1: remove this word's OLD pair contributions
+            for i in range(len(word) - 1):
+                pair = (word[i], word[i + 1])
+                pair_counts[pair] -= freq
+                if pair_counts[pair] <= 0:
+                    del pair_counts[pair]
+                pair_to_words[pair].discard(word)
+
+            # STEP 2: build the new merged word
+            new_word = []
+            i = 0
+            while i < len(word):
+                if i < len(word) - 1 and word[i] == best_pair[0] and word[i + 1] == best_pair[1]:
+                    new_word.append(merged_token)
+                    i += 2
+                else:
+                    new_word.append(word[i])
+                    i += 1
+            new_word = tuple(new_word)
+
+            # STEP 3: remove old word entry, add new word entry
+            del words[word]
+            words[new_word] = words.get(new_word, 0) + freq
+
+            # STEP 4: add NEW word's pair contributions
+            for i in range(len(new_word) - 1):
+                pair = (new_word[i], new_word[i + 1])
+                pair_counts[pair] = pair_counts.get(pair, 0) + freq
+                pair_to_words.setdefault(pair, set()).add(new_word)
+
+    return merges
+
 def build_word_freqs(texts, pattern):
     """
     texts: list of raw strings (your Python code samples)

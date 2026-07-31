@@ -139,6 +139,63 @@ def train_bpe_fast(word_freqs, vocab_size):
 
     return merges
 
+def train_bpe_fast_verbose(word_freqs, vocab_size, log_every=500):
+    words = {word: freq for word, freq in word_freqs.items()}
+    pair_counts = get_pair_counts(words)
+
+    pair_to_words = {}
+    for word in words:
+        for i in range(len(word) - 1):
+            pair = (word[i], word[i + 1])
+            pair_to_words.setdefault(pair, set()).add(word)
+
+    merges = []
+
+    for step in range(vocab_size):
+        if not pair_counts:
+            print(f"Stopped early at step {step} — no more pairs to merge.")
+            break
+
+        best_pair = get_most_frequent_pair(pair_counts)
+        merges.append(best_pair)
+
+        affected_words = pair_to_words.get(best_pair, set())
+        merged_token = best_pair[0] + best_pair[1]
+
+        for word in list(affected_words):
+            freq = words[word]
+
+            for i in range(len(word) - 1):
+                pair = (word[i], word[i + 1])
+                pair_counts[pair] -= freq
+                if pair_counts[pair] <= 0:
+                    del pair_counts[pair]
+                pair_to_words[pair].discard(word)
+
+            new_word = []
+            i = 0
+            while i < len(word):
+                if i < len(word) - 1 and word[i] == best_pair[0] and word[i + 1] == best_pair[1]:
+                    new_word.append(merged_token)
+                    i += 2
+                else:
+                    new_word.append(word[i])
+                    i += 1
+            new_word = tuple(new_word)
+
+            del words[word]
+            words[new_word] = words.get(new_word, 0) + freq
+
+            for i in range(len(new_word) - 1):
+                pair = (new_word[i], new_word[i + 1])
+                pair_counts[pair] = pair_counts.get(pair, 0) + freq
+                pair_to_words.setdefault(pair, set()).add(new_word)
+
+        if (step + 1) % log_every == 0:
+            print(f"Step {step + 1}/{vocab_size} — merged {best_pair} -> '{merged_token}'")
+
+    return merges
+
 def build_word_freqs(texts, pattern):
     """
     texts: list of raw strings (your Python code samples)

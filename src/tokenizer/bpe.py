@@ -20,7 +20,7 @@ def get_most_frequent_pair(pair_counts):
     pair_counts: dict mapping pair -> count (output of get_pair_counts)
     Returns: the pair (tuple of 2 tokens) with the highest count
     """
-    return max(pair_counts, key=pair_counts.get)
+    return max(pair_counts, key=lambda pair: (pair_counts[pair], pair))
 
 def merge_pair(pair, word_freqs):
     """

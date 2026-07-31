@@ -158,17 +158,20 @@ def build_word_freqs(texts, pattern):
     return word_freqs
 
 if __name__ == "__main__":
-    import re
+    import re, time
     from datasets import load_from_disk
 
     PATTERN = re.compile(r"[A-Za-z0-9_]+|[^\sA-Za-z0-9_]|\s+")
-
     train = load_from_disk("data/train")
-    sample_texts = train["text"][:1000]        # small sample first
-
+    sample_texts = train["text"][:1000]
     word_freqs = build_word_freqs(sample_texts, PATTERN)
-    print(f"Unique starting chunks: {len(word_freqs)}")
 
-    merges = train_bpe(word_freqs, vocab_size=200)
-    print(f"Learned {len(merges)} merges")
-    print("First 20 merges:", merges[:20])
+    start = time.time()
+    merges_fast = train_bpe_fast(word_freqs, vocab_size=200)
+    print(f"Fast version: {time.time() - start:.2f}s, {len(merges_fast)} merges")
+
+    start = time.time()
+    merges_slow = train_bpe(word_freqs, vocab_size=200)
+    print(f"Slow version: {time.time() - start:.2f}s, {len(merges_slow)} merges")
+
+    print("Merges match:", merges_fast == merges_slow)

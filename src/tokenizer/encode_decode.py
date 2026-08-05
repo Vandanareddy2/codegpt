@@ -30,3 +30,9 @@ def encode(text, merges, vocab, pattern):
     return token_ids
 
 
+def decode(token_ids, vocab):
+    id_to_token = {idx: token for token, idx in vocab.items()}
+    tokens = [id_to_token[idx] for idx in token_ids]
+    return "".join(tokens)
+
+

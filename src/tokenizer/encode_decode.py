@@ -36,3 +36,23 @@ def decode(token_ids, vocab):
     return "".join(tokens)
 
 
+class Tokenizer:
+    def __init__(self, output_dir="src/tokenizer/output"):
+        output_dir = Path(output_dir)
+
+        with open(output_dir / "vocab.json", "r") as f:
+            self.vocab = json.load(f)
+
+        with open(output_dir / "merges.json", "r") as f:
+            merges_raw = json.load(f)
+            self.merges = [tuple(pair) for pair in merges_raw]
+
+        self.pattern = PATTERN
+
+    def encode(self, text):
+        return encode(text, self.merges, self.vocab, self.pattern)
+
+    def decode(self, token_ids):
+        return decode(token_ids, self.vocab)
+
+

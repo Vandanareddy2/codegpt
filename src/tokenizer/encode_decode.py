@@ -56,3 +56,14 @@ class Tokenizer:
         return decode(token_ids, self.vocab)
 
 
+if __name__ == "__main__":
+    tok = Tokenizer()
+
+    test_text = "def foo():"
+    ids = tok.encode(test_text)
+    decoded = tok.decode(ids)
+
+    print("Original:", test_text)
+    print("Token IDs:", ids)
+    print("Decoded:", decoded)
+    print("Round-trip match:", test_text == decoded)
